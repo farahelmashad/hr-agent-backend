@@ -1,10 +1,3 @@
-"""
-HR AI Agent Backend - Complete Single File Version
-Everything in one file to avoid import issues!
-
-Just run: python main.py
-"""
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -25,9 +18,6 @@ from langchain.agents import AgentExecutor, create_react_agent
 from langchain.prompts import PromptTemplate
 from langchain.tools import Tool
 
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
 
 class Settings(BaseSettings):
     """Application settings"""
@@ -53,9 +43,6 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     return Settings()
 
-# ============================================================================
-# PYDANTIC MODELS
-# ============================================================================
 
 class ChatRequest(BaseModel):
     employee_id: str
@@ -125,9 +112,6 @@ class CaseListResponse(BaseModel):
     page: int
     page_size: int
 
-# ============================================================================
-# QDRANT SERVICE
-# ============================================================================
 
 class QdrantService:
     """Service for all Qdrant database operations"""
@@ -333,9 +317,6 @@ class QdrantService:
             print(f"Error fetching employee cases: {e}")
             return []
 
-# ============================================================================
-# RAG SERVICE
-# ============================================================================
 
 class RAGService:
     """RAG pipeline for policy documents"""
@@ -361,9 +342,6 @@ class RAGService:
         
         return context
 
-# ============================================================================
-# DECISION ENGINE
-# ============================================================================
 
 class DecisionEngine:
     """Business logic for auto-approval"""
@@ -444,9 +422,6 @@ class DecisionEngine:
         except:
             return 1
 
-# ============================================================================
-# AGENT TOOLS
-# ============================================================================
 
 class HRAgentTools:
     """LangChain tools"""
@@ -524,8 +499,8 @@ class HRAgentTools:
                 "escalated": eligibility["escalate"],
                 "priority": "normal",
                 "decision_reason": eligibility["reason"],
-                "agent_response": f"✅ Approved! {eligibility['reason']}" if eligibility["auto_approve"] 
-                                  else f"⏳ Pending review: {eligibility['reason']}",
+                "agent_response": f"Approved! {eligibility['reason']}" if eligibility["auto_approve"] 
+                                  else f"Pending review: {eligibility['reason']}",
             }
             
             case_id = self.qdrant_service.create_case(case_data)
@@ -541,9 +516,6 @@ class HRAgentTools:
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-# ============================================================================
-# LANGCHAIN AGENT
-# ============================================================================
 
 AGENT_PROMPT = """You are an HR assistant. Help employees with leave requests and questions.
 
@@ -607,9 +579,6 @@ class HRLangChainAgent:
                 "case_created": False
             }
 
-# ============================================================================
-# FASTAPI APP
-# ============================================================================
 
 app = FastAPI(title="HR Agent API", version="1.0.0")
 
@@ -634,7 +603,7 @@ hr_agent = None
 async def startup_event():
     global qdrant_service, rag_service, decision_engine, hr_tools, hr_agent
     
-    print("🚀 Initializing HR Agent...")
+    print("Initializing HR Agent...")
     
     qdrant_service = QdrantService(
         url=settings.qdrant_url,
@@ -643,23 +612,23 @@ async def startup_event():
         policies_collection=settings.policies_collection,
         cases_collection=settings.cases_collection
     )
-    print("✅ Qdrant connected")
+    print("Qdrant connected")
     
     rag_service = RAGService(qdrant_service)
-    print("✅ RAG service ready")
+    print("RAG service ready")
     
     decision_engine = DecisionEngine()
-    print("✅ Decision engine ready")
+    print("Decision engine ready")
     
     hr_tools = HRAgentTools(qdrant_service, rag_service, decision_engine)
-    print("✅ Tools ready")
+    print("Tools ready")
     
     hr_agent = HRLangChainAgent(
         gemini_api_key=settings.gemini_api_key,
         tools_instance=hr_tools
     )
-    print("✅ Agent ready")
-    print("🎉 HR Agent Backend is ready!")
+    print("Agent ready")
+    print("HR Agent Backend is ready!")
 
 @app.get("/")
 async def root():
